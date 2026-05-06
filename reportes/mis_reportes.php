@@ -8,65 +8,102 @@ if (!isset($_SESSION['usuario_id'])) {
     header('Location: ../auth/login.php');
     exit();
 }
+
+$sql = 'SELECT id, titulo, descripcion, categoria, estado, ubicacion, fecha_creacion
+        FROM reportes WHERE usuario_id = ? ORDER BY fecha_creacion DESC';
+$stmt = $conexion->prepare($sql);
+$stmt->bind_param('i', $_SESSION['usuario_id']);
+$stmt->execute();
+$reportes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+$conexion->close();
+
+$etiquetas_cat = [
+    'infraestructura' => '🏗️ Infraestructura',
+    'limpieza'        => '🧹 Limpieza',
+    'seguridad'       => '🚨 Seguridad',
+    'transito'        => '🚦 Tránsito',
+    'otros'           => '📌 Otros',
+];
 ?>
 
 <div class="dashboard">
     <?php require_once '../includes/sidebar.php'; ?>
-    
+
     <div class="main-content">
-        <div class="reportes-header">
-            <h2>Mis Reportes</h2>
-            <a href="crear.php" class="crear-reporte-btn">+ Crear Reporte</a>
+
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-list"></i> Mis Reportes</h1>
+            <a href="crear.php" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Nuevo Reporte
+            </a>
         </div>
-        
-        <?php
-        if (isset($_GET['success'])) {
-            echo '<div class="alert alert-success">' . htmlspecialchars($_GET['success']) . '</div>';
-        }
-        if (isset($_GET['error'])) {
-            echo '<div class="alert alert-danger">Error: ' . htmlspecialchars($_GET['error']) . '</div>';
-        }
-        ?>
-        
-        <div class="reportes-list">
-            <?php
-            $sql = 'SELECT id, titulo, descripcion, categoria, estado, fecha_creacion FROM reportes WHERE usuario_id = ? ORDER BY fecha_creacion DESC';
-            $stmt = $conexion->prepare($sql);
-            $stmt->bind_param('i', $_SESSION['usuario_id']);
-            $stmt->execute();
-            $resultados = $stmt->get_result();
-            
-            if ($resultados->num_rows === 0) {
-                echo '<div class="sin-reportes">';
-                echo '<p>No has creado ningún reporte aún.</p>';
-                echo '<a href="crear.php" class="btn btn-primary">Crear mi primer reporte</a>';
-                echo '</div>';
-            } else {
-                while ($reporte = $resultados->fetch_assoc()) {
-                    $clase_estado = 'estado-' . $reporte['estado'];
-                    echo '<div class="reporte-item">';
-                    echo '<div class="reporte-header">';
-                    echo '<h4 class="reporte-titulo">' . htmlspecialchars($reporte['titulo']) . '</h4>';
-                    echo '<span class="reporte-estado ' . $clase_estado . '">' . ucfirst($reporte['estado']) . '</span>';
-                    echo '</div>';
-                    echo '<p class="reporte-descripcion">' . htmlspecialchars(substr($reporte['descripcion'], 0, 150)) . '...</p>';
-                    echo '<div class="reporte-meta">';
-                    echo '<span><i class="fas fa-tag"></i> ' . htmlspecialchars($reporte['categoria']) . '</span>';
-                    echo '<span><i class="fas fa-calendar"></i> ' . date('d/m/Y', strtotime($reporte['fecha_creacion'])) . '</span>';
-                    echo '</div>';
-                    echo '<div class="reporte-acciones">';
-                    echo '<a href="ver_reporte.php?id=' . $reporte['id'] . '" class="btn-ver">Ver Detalles</a>';
-                    echo '<a href="editar_reporte.php?id=' . $reporte['id'] . '" class="btn-editar">Editar</a>';
-                    echo '<button class="btn-eliminar" onclick="if(confirm(\'¿Estás seguro?\')) window.location=\'eliminar_reporte.php?id=' . $reporte['id'] . '\'">Eliminar</button>';
-                    echo '</div>';
-                    echo '</div>';
-                }
-            }
-            
-            $stmt->close();
-            $conexion->close();
-            ?>
-        </div>
+
+        <!-- Alertas -->
+        <?php if (isset($_GET['success'])): ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <?php echo htmlspecialchars($_GET['success']); ?>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_GET['error'])): ?>
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <?php echo htmlspecialchars($_GET['error']); ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Lista de reportes -->
+        <?php if (empty($reportes)): ?>
+            <div class="card text-center" style="padding: 48px 24px;">
+                <div style="font-size:3rem; margin-bottom:16px;">📋</div>
+                <h3 style="color:#64748b; font-weight:500;">No tienes reportes aún</h3>
+                <p style="color:#94a3b8; margin-bottom:20px;">Crea tu primer reporte para ayudar a mejorar tu ciudad.</p>
+                <a href="crear.php" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Crear mi primer reporte
+                </a>
+            </div>
+        <?php else: ?>
+            <div class="reportes-list">
+                <?php foreach ($reportes as $reporte): ?>
+                    <div class="reporte-item">
+                        <div class="reporte-header">
+                            <div>
+                                <h4 class="reporte-titulo"><?php echo htmlspecialchars($reporte['titulo']); ?></h4>
+                                <div class="reporte-meta">
+                                    <span><i class="fas fa-tag"></i> <?php echo $etiquetas_cat[$reporte['categoria']] ?? ucfirst($reporte['categoria']); ?></span>
+                                    <span><i class="fas fa-map-pin"></i> <?php echo htmlspecialchars($reporte['ubicacion']); ?></span>
+                                    <span><i class="fas fa-calendar"></i> <?php echo date('d/m/Y', strtotime($reporte['fecha_creacion'])); ?></span>
+                                </div>
+                            </div>
+                            <span class="reporte-estado estado-<?php echo $reporte['estado']; ?>">
+                                <?php echo ucfirst(str_replace('_', ' ', $reporte['estado'])); ?>
+                            </span>
+                        </div>
+
+                        <p class="reporte-descripcion">
+                            <?php echo htmlspecialchars(mb_substr($reporte['descripcion'], 0, 160)); ?>
+                            <?php echo mb_strlen($reporte['descripcion']) > 160 ? '…' : ''; ?>
+                        </p>
+
+                        <div class="reporte-acciones">
+                            <a href="ver_reporte.php?id=<?php echo $reporte['id']; ?>" class="btn btn-outline btn-sm">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </a>
+                            <a href="editar_reporte.php?id=<?php echo $reporte['id']; ?>" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="eliminar_reporte.php?id=<?php echo $reporte['id']; ?>"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('¿Estás seguro de eliminar este reporte? No se puede deshacer.')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
