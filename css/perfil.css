@@ -19,7 +19,7 @@
 
 .perfil-card h3 {
     font-size: 0.95rem;
-    color: #1e293b;
+    color: #2D3748;
     margin: 0 0 20px;
     display: flex;
     align-items: center;
@@ -37,7 +37,7 @@
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #008080, #006666);
     color: white;
     display: flex;
     align-items: center;
@@ -45,12 +45,12 @@
     font-size: 2.2rem;
     font-weight: 700;
     margin: 0 auto 16px;
-    box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+    box-shadow: 0 4px 16px rgba(0,128,128,0.3);
 }
 
 .perfil-hero h2 {
     font-size: 1.3rem;
-    color: #1e293b;
+    color: #2D3748;
     margin: 0 0 6px;
 }
 
@@ -93,7 +93,7 @@
 .stat-mini-num {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #2D3748;
     line-height: 1;
 }
 

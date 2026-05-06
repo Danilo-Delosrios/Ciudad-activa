@@ -8,6 +8,7 @@ if (session_status() == PHP_SESSION_NONE) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,9 +33,10 @@ if (session_status() == PHP_SESSION_NONE) {
 
     <!-- CSS adicional extra (para páginas con Leaflet, etc.) -->
     <?php if (isset($css_extra)): ?>
-        <?php foreach ((array)$css_extra as $css): ?>
+        <?php foreach ((array) $css_extra as $css): ?>
             <link rel="stylesheet" href="<?php echo $css; ?>">
         <?php endforeach; ?>
     <?php endif; ?>
 </head>
+
 <body>

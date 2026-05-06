@@ -11,8 +11,11 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
 ?>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <h3>🏙️ Ciudad Activa</h3>
-        <p>Portal Ciudadano</p>
+        <img src="../img/logo_Ciudad_activa.png" alt="Ciudad Activa" class="sidebar-logo">
+        <div class="sidebar-header-text">
+            <h3>Ciudad Activa</h3>
+            <p>Portal Ciudadano</p>
+        </div>
     </div>
 
     <nav>
@@ -25,7 +28,7 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
             </li>
             <li>
                 <a href="../reportes/crear.php"
-                   class="<?php echo $pagina_actual === 'crear.php' ? 'active' : ''; ?>">
+                   class="sidebar-crear-reporte <?php echo $pagina_actual === 'crear.php' ? 'active' : ''; ?>">
                     <i class="fas fa-plus-circle"></i> Crear Reporte
                 </a>
             </li>

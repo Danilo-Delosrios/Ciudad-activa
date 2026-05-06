@@ -12,7 +12,7 @@ if (isset($_SESSION['usuario_id'])) {
 <div class="auth-container">
     <div class="auth-box">
         <div class="auth-logo">
-            <span class="logo-icon">🏙️</span>
+            <img src="../img/logo_Ciudad_activa.png" alt="Ciudad Activa" class="logo-img">
             <h1>Ciudad Activa</h1>
             <p>Portal Ciudadano</p>
         </div>

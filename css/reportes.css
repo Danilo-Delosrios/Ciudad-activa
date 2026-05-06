@@ -17,7 +17,7 @@
 .reportes-header h2 {
     margin: 0;
     font-size: 1.25rem;
-    color: #1e293b;
+    color: #2D3748;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -51,7 +51,7 @@
 .reporte-titulo {
     font-size: 1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: #2D3748;
     margin: 0 0 6px;
 }
 
@@ -147,7 +147,7 @@
     transition: border-color 0.2s;
 }
 
-.mapa-selector-wrapper:hover { border-color: #2563eb; }
+.mapa-selector-wrapper:hover { border-color: #008080; }
 
 .mapa-selector {
     width: 100%;
@@ -194,7 +194,7 @@
 
 .reporte-titulo-grande {
     font-size: 1.3rem;
-    color: #1e293b;
+    color: #2D3748;
     margin: 0 0 8px;
 }
 
