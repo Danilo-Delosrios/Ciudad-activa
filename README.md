@@ -73,7 +73,7 @@ ciudad-activa/
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/XxDidixX777/ciudad-activa.git
+git clone https://github.com/Danilo-Delosrios/ciudad-activa.git
 cd ciudad-activa
 ```
 
