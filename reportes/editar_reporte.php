@@ -37,22 +37,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $descripcion = trim($_POST['descripcion'] ?? '');
     $categoria   = trim($_POST['categoria']   ?? '');
     $ubicacion   = trim($_POST['ubicacion']   ?? '');
+    $ciudad      = trim($_POST['ciudad']      ?? '');
     $estado      = trim($_POST['estado']      ?? '');
 
-    if (empty($titulo) || empty($descripcion) || empty($categoria) || empty($ubicacion) || empty($estado)) {
+    if (empty($titulo) || empty($descripcion) || empty($categoria) || empty($ubicacion) || empty($ciudad) || empty($estado)) {
         $error = 'Por favor completa todos los campos requeridos.';
     } else {
         $stmt = $conexion->prepare(
-            'UPDATE reportes SET titulo=?, descripcion=?, categoria=?, ubicacion=?, estado=?, fecha_actualizacion=NOW()
+            'UPDATE reportes SET titulo=?, descripcion=?, categoria=?, ubicacion=?, ciudad=?, estado=?, fecha_actualizacion=NOW()
              WHERE id=? AND usuario_id=?'
         );
-        $stmt->bind_param('sssssii', $titulo, $descripcion, $categoria, $ubicacion, $estado, $id, $_SESSION['usuario_id']);
+        $stmt->bind_param('ssssssii', $titulo, $descripcion, $categoria, $ubicacion, $ciudad, $estado, $id, $_SESSION['usuario_id']);
 
         if ($stmt->execute()) {
             $reporte['titulo']      = $titulo;
             $reporte['descripcion'] = $descripcion;
             $reporte['categoria']   = $categoria;
             $reporte['ubicacion']   = $ubicacion;
+            $reporte['ciudad']      = $ciudad;
             $reporte['estado']      = $estado;
             $success = 'Reporte actualizado correctamente.';
         } else {
@@ -124,6 +126,19 @@ $conexion->close();
                         <label for="ubicacion">Dirección / Referencia *</label>
                         <input type="text" id="ubicacion" name="ubicacion" required
                                value="<?php echo htmlspecialchars($reporte['ubicacion']); ?>">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ciudad">Ciudad *</label>
+                        <select id="ciudad" name="ciudad" required>
+                            <?php
+                            $ciudades = ['Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Bucaramanga', 'Pereira', 'Santa Marta', 'Otras'];
+                            foreach ($ciudades as $ciu):
+                                $sel = $reporte['ciudad'] === $ciu ? 'selected' : '';
+                            ?>
+                                <option value="<?php echo $ciu; ?>" <?php echo $sel; ?>><?php echo $ciu; ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
 

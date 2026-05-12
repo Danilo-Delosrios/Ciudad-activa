@@ -129,6 +129,10 @@ $estado_info = $etiquetas_estado[$reporte['estado']] ?? ['label' => ucfirst($rep
 
                 <div class="reporte-info-grid">
                     <div class="info-bloque">
+                        <span class="info-label"><i class="fas fa-map-marker-alt"></i> Ciudad</span>
+                        <span class="info-valor"><?php echo htmlspecialchars($reporte['ciudad']); ?></span>
+                    </div>
+                    <div class="info-bloque">
                         <span class="info-label"><i class="fas fa-map-pin"></i> Ubicación</span>
                         <span class="info-valor"><?php echo htmlspecialchars($reporte['ubicacion']); ?></span>
                     </div>

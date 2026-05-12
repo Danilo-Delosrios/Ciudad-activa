@@ -22,6 +22,7 @@ $titulo      = trim($_POST['titulo']      ?? '');
 $descripcion = trim($_POST['descripcion'] ?? '');
 $categoria   = trim($_POST['categoria']   ?? '');
 $ubicacion   = trim($_POST['ubicacion']   ?? '');
+$ciudad      = trim($_POST['ciudad']      ?? '');
 $usuario_id  = (int) $_SESSION['usuario_id'];
 
 // Coordenadas — opcionales
@@ -29,7 +30,7 @@ $latitud  = (isset($_POST['latitud'])  && $_POST['latitud']  !== '') ? $_POST['l
 $longitud = (isset($_POST['longitud']) && $_POST['longitud'] !== '') ? $_POST['longitud'] : null;
 
 // Validar campos requeridos
-if (empty($titulo) || empty($descripcion) || empty($categoria) || empty($ubicacion)) {
+if (empty($titulo) || empty($descripcion) || empty($categoria) || empty($ubicacion) || empty($ciudad)) {
     header('Location: crear.php?error=' . urlencode('Por favor completa todos los campos requeridos'));
     exit();
 }
@@ -87,8 +88,8 @@ if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
 // MySQL convierte strings numéricos a DECIMAL correctamente
 // y PHP MySQLi envía NULL SQL cuando el valor PHP es null con tipo 's'
 $sql = 'INSERT INTO reportes
-            (usuario_id, titulo, descripcion, categoria, ubicacion, latitud, longitud, imagen, estado, fecha_creacion)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, "pendiente", NOW())';
+            (usuario_id, titulo, descripcion, categoria, ubicacion, ciudad, latitud, longitud, imagen, estado, fecha_creacion)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "pendiente", NOW())';
 
 $stmt = $conexion->prepare($sql);
 
@@ -98,12 +99,13 @@ if (!$stmt) {
 }
 
 // Todos como 's' excepto usuario_id ('i') — PHP envía NULL correctamente con 's'
-$stmt->bind_param('isssssss',
+$stmt->bind_param('issssssss',
     $usuario_id,
     $titulo,
     $descripcion,
     $categoria,
     $ubicacion,
+    $ciudad,
     $latitud,
     $longitud,
     $imagen_nombre

@@ -60,6 +60,22 @@ if (!isset($_SESSION['usuario_id'])) {
                         <input type="text" id="ubicacion" name="ubicacion" required
                                placeholder="Ej: Calle 72 con Av. Caracas">
                     </div>
+
+                    <div class="form-group">
+                        <label for="ciudad">Ciudad *</label>
+                        <select id="ciudad" name="ciudad" required>
+                            <option value="">-- Selecciona una ciudad --</option>
+                            <option value="Bogotá">Bogotá</option>
+                            <option value="Medellín">Medellín</option>
+                            <option value="Cali">Cali</option>
+                            <option value="Barranquilla">Barranquilla</option>
+                            <option value="Cartagena">Cartagena</option>
+                            <option value="Bucaramanga">Bucaramanga</option>
+                            <option value="Pereira">Pereira</option>
+                            <option value="Santa Marta">Santa Marta</option>
+                            <option value="Otras">Otras</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Mapa para seleccionar ubicación exacta -->
