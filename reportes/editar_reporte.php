@@ -37,21 +37,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $descripcion = trim($_POST['descripcion'] ?? '');
     $categoria   = trim($_POST['categoria']   ?? '');
     $ubicacion   = trim($_POST['ubicacion']   ?? '');
+    $estado      = trim($_POST['estado']      ?? '');
 
-    if (empty($titulo) || empty($descripcion) || empty($categoria) || empty($ubicacion)) {
+    if (empty($titulo) || empty($descripcion) || empty($categoria) || empty($ubicacion) || empty($estado)) {
         $error = 'Por favor completa todos los campos requeridos.';
     } else {
         $stmt = $conexion->prepare(
-            'UPDATE reportes SET titulo=?, descripcion=?, categoria=?, ubicacion=?, fecha_actualizacion=NOW()
+            'UPDATE reportes SET titulo=?, descripcion=?, categoria=?, ubicacion=?, estado=?, fecha_actualizacion=NOW()
              WHERE id=? AND usuario_id=?'
         );
-        $stmt->bind_param('ssssii', $titulo, $descripcion, $categoria, $ubicacion, $id, $_SESSION['usuario_id']);
+        $stmt->bind_param('sssssii', $titulo, $descripcion, $categoria, $ubicacion, $estado, $id, $_SESSION['usuario_id']);
 
         if ($stmt->execute()) {
             $reporte['titulo']      = $titulo;
             $reporte['descripcion'] = $descripcion;
             $reporte['categoria']   = $categoria;
             $reporte['ubicacion']   = $ubicacion;
+            $reporte['estado']      = $estado;
             $success = 'Reporte actualizado correctamente.';
         } else {
             $error = 'Error al actualizar el reporte: ' . $stmt->error;
@@ -123,6 +125,24 @@ $conexion->close();
                         <input type="text" id="ubicacion" name="ubicacion" required
                                value="<?php echo htmlspecialchars($reporte['ubicacion']); ?>">
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="estado">Estado del Reporte *</label>
+                    <select id="estado" name="estado" required>
+                        <?php
+                        $estados = [
+                            'pendiente'  => '⏳ Pendiente',
+                            'en_proceso' => '⚙️ En Proceso',
+                            'resuelto'   => '✅ Resuelto',
+                            'rechazado'  => '❌ Rechazado',
+                        ];
+                        foreach ($estados as $val => $label):
+                            $sel = $reporte['estado'] === $val ? 'selected' : '';
+                        ?>
+                            <option value="<?php echo $val; ?>" <?php echo $sel; ?>><?php echo $label; ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <div class="form-group form-acciones">

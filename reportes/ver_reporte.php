@@ -15,23 +15,36 @@ if ($id <= 0) {
     exit();
 }
 
-// Obtener el reporte (solo del usuario actual)
+// Obtener el reporte (cualquier usuario puede ver cualquier reporte)
 $stmt = $conexion->prepare(
     'SELECT r.*, u.nombre AS autor_nombre
      FROM reportes r
      JOIN usuarios u ON r.usuario_id = u.id
-     WHERE r.id = ? AND r.usuario_id = ?'
+     WHERE r.id = ?'
 );
-$stmt->bind_param('ii', $id, $_SESSION['usuario_id']);
+$stmt->bind_param('i', $id);
 $stmt->execute();
 $reporte = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
 if (!$reporte) {
     header('Location: mis_reportes.php?error=' . urlencode('Reporte no encontrado'));
     exit();
 }
 
+// Obtener comentarios
+$stmt = $conexion->prepare(
+    'SELECT c.*, u.nombre AS usuario_nombre
+     FROM comentarios c
+     JOIN usuarios u ON c.usuario_id = u.id
+     WHERE c.reporte_id = ?
+     ORDER BY c.fecha_creacion ASC'
+);
+$stmt->bind_param('i', $id);
+$stmt->execute();
+$comentarios = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
 $conexion->close();
 
 $etiquetas_estado = [
@@ -66,6 +79,13 @@ $estado_info = $etiquetas_estado[$reporte['estado']] ?? ['label' => ucfirst($rep
             </div>
         </div>
 
+        <?php if (isset($_GET['success'])): ?>
+            <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET['success']); ?></div>
+        <?php endif; ?>
+        <?php if (isset($_GET['error'])): ?>
+            <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET['error']); ?></div>
+        <?php endif; ?>
+
         <div class="ver-reporte-grid">
             <!-- Card principal -->
             <div class="card">
@@ -89,14 +109,16 @@ $estado_info = $etiquetas_estado[$reporte['estado']] ?? ['label' => ucfirst($rep
                         </div>
                     </div>
                     <div class="acciones-reporte">
-                        <a href="editar_reporte.php?id=<?php echo $reporte['id']; ?>" class="btn btn-primary btn-sm">
-                            <i class="fas fa-edit"></i> Editar
-                        </a>
-                        <a href="eliminar_reporte.php?id=<?php echo $reporte['id']; ?>"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('¿Eliminar este reporte? Esta acción no se puede deshacer.')">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </a>
+                        <?php if ($reporte['usuario_id'] == $_SESSION['usuario_id']): ?>
+                            <a href="editar_reporte.php?id=<?php echo $reporte['id']; ?>" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="eliminar_reporte.php?id=<?php echo $reporte['id']; ?>"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('¿Eliminar este reporte? Esta acción no se puede deshacer.')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -134,6 +156,78 @@ $estado_info = $etiquetas_estado[$reporte['estado']] ?? ['label' => ucfirst($rep
                          style="max-width:100%; border-radius:8px; margin-top:10px;">
                 </div>
                 <?php endif; ?>
+
+                <!-- Gestión de Estado (Solo dueño) -->
+                <?php if ($reporte['usuario_id'] == $_SESSION['usuario_id']): ?>
+                <div class="reporte-gestion-estado" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                    <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 15px;">
+                        Cambiar Estado Rápidamente
+                    </h4>
+                    <div class="estado-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <?php
+                        $opciones_estado = [
+                            'pendiente'  => ['label' => 'Pendiente',   'class' => 'btn-warning', 'icon' => 'fa-clock'],
+                            'en_proceso' => ['label' => 'En Proceso',  'class' => 'btn-info',    'icon' => 'fa-spinner'],
+                            'resuelto'   => ['label' => 'Resuelto',    'class' => 'btn-success', 'icon' => 'fa-check'],
+                            'rechazado'  => ['label' => 'Rechazado',   'class' => 'btn-danger',  'icon' => 'fa-times'],
+                        ];
+
+                        foreach ($opciones_estado as $slug => $data):
+                            $is_current = ($reporte['estado'] === $slug);
+                        ?>
+                            <form action="actualizar_estado.php" method="POST" style="display: inline;">
+                                <input type="hidden" name="reporte_id" value="<?php echo $id; ?>">
+                                <input type="hidden" name="nuevo_estado" value="<?php echo $slug; ?>">
+                                <button type="submit" class="btn <?php echo $data['class']; ?> btn-sm" 
+                                        <?php echo $is_current ? 'disabled' : ''; ?>
+                                        style="<?php echo $is_current ? 'opacity: 0.5; cursor: not-allowed;' : ''; ?>">
+                                    <i class="fas <?php echo $data['icon']; ?>"></i> <?php echo $data['label']; ?>
+                                </button>
+                            </form>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Sección de Comentarios -->
+                <div class="reporte-comentarios" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #f1f5f9;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px;"><i class="fas fa-comments"></i> Comentarios (<?php echo count($comentarios); ?>)</h3>
+                    
+                    <div class="lista-comentarios" style="margin-bottom: 25px;">
+                        <?php if (empty($comentarios)): ?>
+                            <p style="color: #94a3b8; font-style: italic;">No hay comentarios todavía. ¡Sé el primero en comentar!</p>
+                        <?php else: ?>
+                            <?php foreach ($comentarios as $comentario): ?>
+                                <div class="comentario-item" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #cbd5e1;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; color: #1e293b; font-size: 0.9rem;">
+                                            <?php echo htmlspecialchars($comentario['usuario_nombre']); ?>
+                                        </span>
+                                        <span style="font-size: 0.75rem; color: #94a3b8;">
+                                            <?php echo date('d/m/Y H:i', strtotime($comentario['fecha_creacion'])); ?>
+                                        </span>
+                                    </div>
+                                    <p style="font-size: 0.88rem; color: #475569; margin: 0; line-height: 1.5;">
+                                        <?php echo nl2br(htmlspecialchars($comentario['contenido'])); ?>
+                                    </p>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="nuevo-comentario">
+                        <form action="guardar_comentario.php" method="POST">
+                            <input type="hidden" name="reporte_id" value="<?php echo $id; ?>">
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <textarea name="contenido" rows="3" placeholder="Escribe un comentario..." required 
+                                          style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; resize: vertical; font-family: inherit; font-size: 0.9rem;"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Publicar Comentario
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- Mapa mini (si tiene coordenadas) -->

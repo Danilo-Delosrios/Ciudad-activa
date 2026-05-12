@@ -27,6 +27,12 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <li>
+                <a href="../reportes/explorar.php"
+                   class="<?php echo $pagina_actual === 'explorar.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-search"></i> Explorar Reportes
+                </a>
+            </li>
+            <li>
                 <a href="../reportes/crear.php"
                    class="sidebar-crear-reporte <?php echo $pagina_actual === 'crear.php' ? 'active' : ''; ?>">
                     <i class="fas fa-plus-circle"></i> Crear Reporte
