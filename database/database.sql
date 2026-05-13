@@ -21,6 +21,7 @@ CREATE TABLE reportes (
     categoria ENUM('infraestructura', 'limpieza', 'seguridad', 'transito', 'otros') NOT NULL,
     ubicacion VARCHAR(255) NOT NULL,
     imagen VARCHAR(255),
+    ciudad VARCHAR(100)
     estado ENUM('pendiente', 'en_proceso', 'resuelto', 'rechazado') DEFAULT 'pendiente',
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
