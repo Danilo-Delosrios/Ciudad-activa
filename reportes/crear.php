@@ -128,10 +128,26 @@ if (!isset($_SESSION['usuario_id'])) {
 
 <script>
 // ── Mapa selector de ubicación ──────────────────────────────────────────────
+const defaultCenter = [4.5709, -74.2973];
+const defaultZoom = 6;
+
 const mapaSelector = L.map('mapa-selector', {
-    center: [4.7110, -74.0721],
-    zoom: 13
+    center: defaultCenter,
+    zoom: defaultZoom
 });
+
+// Intentar obtener geolocalización para centrar el mapa
+if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            mapaSelector.setView([position.coords.latitude, position.coords.longitude], 14);
+        },
+        function(error) {
+            console.log("Geolocalización no disponible para centrar mapa:", error.message);
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+    );
+}
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',

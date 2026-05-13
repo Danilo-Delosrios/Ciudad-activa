@@ -140,10 +140,14 @@ $conexion->close();
 // Datos de reportes desde PHP
 const reportesMapa = <?php echo json_encode($reportes_mapa, JSON_UNESCAPED_UNICODE); ?>;
 
-// Inicializar mapa centrado en Colombia (ajusta según tu ciudad)
+// Configuración por defecto (Colombia)
+const defaultCenter = [4.5709, -74.2973];
+const defaultZoom = 6;
+
+// Inicializar mapa
 const map = L.map('mapa-dashboard', {
-    center: [4.7110, -74.0721],
-    zoom: 12,
+    center: defaultCenter,
+    zoom: defaultZoom,
     zoomControl: true
 });
 
@@ -188,52 +192,118 @@ const emojiCategoria = {
     otros:           '📌'
 };
 
-// Agregar marcadores al mapa
-if (reportesMapa.length > 0) {
-    const bounds = [];
+// Capa de marcadores
+let marcadoresLayer = L.layerGroup().addTo(map);
 
-    reportesMapa.forEach(function(r) {
-        const lat = parseFloat(r.latitud);
-        const lng = parseFloat(r.longitud);
-        bounds.push([lat, lng]);
+// Renderizar reportes según ubicación
+function renderizarReportes(userLat = null, userLng = null, radiusKm = 50) {
+    marcadoresLayer.clearLayers();
+    let bounds = [];
+    let reportesMostrados = 0;
 
-        const emoji = emojiCategoria[r.categoria] || '📌';
-        const fecha = new Date(r.fecha_creacion).toLocaleDateString('es-CO', {
-            day: '2-digit', month: 'short', year: 'numeric'
+    if (userLat && userLng) {
+        // Marcador del usuario
+        const userIcon = L.divIcon({
+            html: '<div style="background-color: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>',
+            className: '',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+        });
+        L.marker([userLat, userLng], {icon: userIcon})
+         .bindPopup('<b>📍 Tu ubicación actual</b>')
+         .addTo(marcadoresLayer);
+         bounds.push([userLat, userLng]);
+    }
+
+    if (reportesMapa.length > 0) {
+        reportesMapa.forEach(function(r) {
+            const lat = parseFloat(r.latitud);
+            const lng = parseFloat(r.longitud);
+
+            // Filtrar por distancia si hay geolocalización
+            if (userLat && userLng) {
+                const distance = map.distance([userLat, userLng], [lat, lng]);
+                if (distance > radiusKm * 1000) {
+                    return; // Omitir si está fuera del radio
+                }
+            }
+
+            bounds.push([lat, lng]);
+            reportesMostrados++;
+
+            const emoji = emojiCategoria[r.categoria] || '📌';
+            const fecha = new Date(r.fecha_creacion).toLocaleDateString('es-CO', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            });
+
+            const popupHTML = `
+                <div class="popup-reporte">
+                    <div class="popup-header popup-${r.estado}">
+                        ${emoji} ${r.categoria.charAt(0).toUpperCase() + r.categoria.slice(1)}
+                    </div>
+                    <h4>${r.titulo}</h4>
+                    <p class="popup-desc">${r.descripcion.substring(0, 120)}${r.descripcion.length > 120 ? '…' : ''}</p>
+                    <div class="popup-meta">
+                        <span class="popup-estado popup-badge-${r.estado}">${r.estado.replace('_', ' ')}</span>
+                        <span class="popup-fecha">${fecha}</span>
+                    </div>
+                    <p class="popup-autor"><i>👤 ${r.autor}</i></p>
+                </div>`;
+
+            const marker = L.marker([lat, lng], { icon: crearIcono(r.estado) })
+                .bindPopup(popupHTML, { maxWidth: 280 });
+            
+            marcadoresLayer.addLayer(marker);
         });
 
-        const popupHTML = `
-            <div class="popup-reporte">
-                <div class="popup-header popup-${r.estado}">
-                    ${emoji} ${r.categoria.charAt(0).toUpperCase() + r.categoria.slice(1)}
-                </div>
-                <h4>${r.titulo}</h4>
-                <p class="popup-desc">${r.descripcion.substring(0, 120)}${r.descripcion.length > 120 ? '…' : ''}</p>
-                <div class="popup-meta">
-                    <span class="popup-estado popup-badge-${r.estado}">${r.estado.replace('_', ' ')}</span>
-                    <span class="popup-fecha">${fecha}</span>
-                </div>
-                <p class="popup-autor"><i>👤 ${r.autor}</i></p>
-            </div>`;
-
-        L.marker([lat, lng], { icon: crearIcono(r.estado) })
-            .addTo(map)
-            .bindPopup(popupHTML, { maxWidth: 280 });
-    });
-
-    // Ajustar el mapa para mostrar todos los marcadores
-    if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+        // Ajustar vista
+        if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+        }
     }
+
+    // Manejar estado vacío
+    const mapContainer = document.getElementById('mapa-dashboard');
+    const oldMsg = mapContainer.querySelector('.map-no-data-msg');
+    if (oldMsg) oldMsg.remove();
+
+    if (reportesMostrados === 0) {
+        const div = document.createElement('div');
+        div.className = 'map-no-data-msg leaflet-control';
+        div.style.backgroundColor = 'white';
+        div.style.padding = '10px 15px';
+        div.style.borderRadius = '5px';
+        div.style.boxShadow = '0 1px 5px rgba(0,0,0,0.4)';
+        div.style.position = 'absolute';
+        div.style.top = '10px';
+        div.style.right = '10px';
+        div.style.zIndex = '1000';
+        div.style.fontWeight = 'bold';
+        div.style.color = '#374151';
+        div.innerHTML = userLat ? '📍 No hay reportes cerca de tu ubicación' : '📍 Aún no hay reportes con ubicación';
+        mapContainer.appendChild(div);
+    }
+}
+
+// Iniciar proceso de geolocalización
+if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            // Permiso concedido: mostrar reportes cercanos (50 km)
+            renderizarReportes(position.coords.latitude, position.coords.longitude, 50);
+        },
+        function(error) {
+            // Permiso denegado o error: mostrar todos los reportes a nivel Colombia
+            console.log("Geolocalización no disponible:", error.message);
+            renderizarReportes();
+            map.setView(defaultCenter, defaultZoom);
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+    );
 } else {
-    // Sin reportes: mostrar mensaje centrado en el mapa
-    const noReportesControl = L.control({ position: 'topright' });
-    noReportesControl.onAdd = function() {
-        const div = L.DomUtil.create('div', 'map-no-data');
-        div.innerHTML = '📍 Aún no hay reportes con ubicación en el mapa';
-        return div;
-    };
-    noReportesControl.addTo(map);
+    // Navegador no soporta geolocalización
+    renderizarReportes();
+    map.setView(defaultCenter, defaultZoom);
 }
 </script>
 
