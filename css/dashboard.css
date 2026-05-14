@@ -233,7 +233,7 @@
 
 .stat-total::after    { background: #008080; }
 .stat-resuelto::after { background: #16a34a; }
-.stat-pendiente::after{ background: #FF8C00; }
+.stat-reportado::after{ background: #f59e0b; }
 
 .stat-icon {
     font-size: 1.4rem;
@@ -242,7 +242,7 @@
 
 .stat-total    .stat-icon { color: #008080; }
 .stat-resuelto .stat-icon { color: #16a34a; }
-.stat-pendiente .stat-icon { color: #FF8C00; }
+.stat-reportado .stat-icon { color: #f59e0b; }
 
 .stat-card h3 {
     font-size: 0.72rem;
@@ -309,10 +309,11 @@
     border-radius: 50%;
 }
 
-.dot-pendiente  { background: #FF8C00; }
-.dot-en_proceso { background: #008080; }
-.dot-resuelto   { background: #16a34a; }
-.dot-rechazado  { background: #dc2626; }
+.dot-reportado  { background: #f59e0b; }
+.dot-en_revision{ background: #8b5cf6; }
+.dot-en_proceso { background: #3b82f6; }
+.dot-resuelto   { background: #10b981; }
+.dot-rechazado  { background: #ef4444; }
 
 .leaflet-map {
     width: 100%;
@@ -324,8 +325,9 @@
 .popup-reporte { min-width: 200px; font-family: inherit; }
 .popup-header  { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.4px; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; display: inline-block; }
 
-.popup-pendiente  { background: #fff4e6; color: #92400e; }
-.popup-en_proceso { background: #e0f5f5; color: #005f5f; }
+.popup-reportado  { background: #fffbeb; color: #92400e; }
+.popup-en_revision{ background: #f3e8ff; color: #6b21a8; }
+.popup-en_proceso { background: #eff6ff; color: #1e40af; }
 .popup-resuelto   { background: #dcfce7; color: #166534; }
 .popup-rechazado  { background: #fee2e2; color: #991b1b; }
 
@@ -333,8 +335,9 @@
 .popup-desc { font-size: 0.8rem; color: #64748b; margin: 0 0 8px; line-height: 1.4; }
 .popup-meta { display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-bottom: 4px; }
 .popup-estado { font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 99px; }
-.popup-badge-pendiente  { background: #fff4e6; color: #92400e; }
-.popup-badge-en_proceso { background: #e0f5f5; color: #005f5f; }
+.popup-badge-reportado  { background: #fffbeb; color: #92400e; }
+.popup-badge-en_revision{ background: #f3e8ff; color: #6b21a8; }
+.popup-badge-en_proceso { background: #eff6ff; color: #1e40af; }
 .popup-badge-resuelto   { background: #dcfce7; color: #166534; }
 .popup-badge-rechazado  { background: #fee2e2; color: #991b1b; }
 .popup-fecha  { font-size: 0.72rem; color: #94a3b8; }

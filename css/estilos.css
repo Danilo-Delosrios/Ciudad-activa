@@ -250,14 +250,16 @@ tbody tr:hover td { background: var(--gray-50); }
     text-transform: capitalize;
 }
 
-.badge-pendiente  { background: var(--warning-light); color: #92400e; }
+.badge-reportado  { background: var(--warning-light); color: #92400e; }
+.badge-en_revision{ background: #f3e8ff; color: #6b21a8; }
 .badge-en_proceso { background: var(--info-light);    color: #005f5f; }
 .badge-resuelto   { background: var(--success-light); color: #166534; }
 .badge-rechazado  { background: var(--danger-light);  color: #991b1b; }
 
 /* Alias para compatibilidad */
 .reporte-estado, .estado-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize; }
-.estado-pendiente  { background: var(--warning-light); color: #92400e; }
+.estado-reportado  { background: var(--warning-light); color: #92400e; }
+.estado-en_revision{ background: #f3e8ff; color: #6b21a8; }
 .estado-en_proceso { background: var(--info-light);    color: #005f5f; }
 .estado-resuelto   { background: var(--success-light); color: #166534; }
 .estado-rechazado  { background: var(--danger-light);  color: #991b1b; }

@@ -15,6 +15,11 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
         <div class="sidebar-header-text">
             <h3>Ciudad Activa</h3>
             <p>Portal Ciudadano</p>
+            <div style="margin-top: 8px;">
+                <span style="background: rgba(255,255,255,0.15); color: #f8fafc; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.3);">
+                    <i class="fas fa-user-tag"></i> <?php echo isset($_SESSION['usuario_rol']) ? htmlspecialchars($_SESSION['usuario_rol']) : 'USUARIO'; ?>
+                </span>
+            </div>
         </div>
     </div>
 
@@ -51,6 +56,14 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <li class="menu-divider"></li>
+            <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'): ?>
+            <li>
+                <a href="../admin/roles.php"
+                   class="<?php echo strpos($pagina_actual, 'roles.php') !== false ? 'active' : ''; ?>" style="color: #3b82f6;">
+                    <i class="fas fa-users-cog"></i> Panel Admin
+                </a>
+            </li>
+            <?php endif; ?>
             <li>
                 <a href="../logout.php" style="color:#f87171;">
                     <i class="fas fa-sign-out-alt"></i> Cerrar Sesión

@@ -34,7 +34,7 @@ if (!$reporte) {
 
 // Obtener comentarios
 $stmt = $conexion->prepare(
-    'SELECT c.*, u.nombre AS usuario_nombre
+    'SELECT c.*, u.nombre AS usuario_nombre, u.rol AS usuario_rol
      FROM comentarios c
      JOIN usuarios u ON c.usuario_id = u.id
      WHERE c.reporte_id = ?
@@ -45,10 +45,26 @@ $stmt->execute();
 $comentarios = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+$comentarios_privados = [];
+if (isset($_SESSION['usuario_rol']) && in_array($_SESSION['usuario_rol'], ['funcionario', 'admin'])) {
+    $stmt = $conexion->prepare(
+        'SELECT c.*, u.nombre AS usuario_nombre
+         FROM comentarios_privados c
+         JOIN usuarios u ON c.usuario_id = u.id
+         WHERE c.reporte_id = ?
+         ORDER BY c.fecha_creacion ASC'
+    );
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $comentarios_privados = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+}
+
 $conexion->close();
 
 $etiquetas_estado = [
-    'pendiente'  => ['label' => 'Pendiente',   'class' => 'estado-pendiente'],
+    'reportado'  => ['label' => 'Reportado',   'class' => 'estado-reportado'],
+    'en_revision'=> ['label' => 'En Revisión', 'class' => 'estado-en_revision'],
     'en_proceso' => ['label' => 'En Proceso',  'class' => 'estado-en_proceso'],
     'resuelto'   => ['label' => 'Resuelto',    'class' => 'estado-resuelto'],
     'rechazado'  => ['label' => 'Rechazado',   'class' => 'estado-rechazado'],
@@ -161,51 +177,96 @@ $estado_info = $etiquetas_estado[$reporte['estado']] ?? ['label' => ucfirst($rep
                 </div>
                 <?php endif; ?>
 
-                <!-- Gestión de Estado (Solo dueño) -->
-                <?php if ($reporte['usuario_id'] == $_SESSION['usuario_id']): ?>
-                <div class="reporte-gestion-estado" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
-                    <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 15px;">
-                        Cambiar Estado Rápidamente
+                <!-- Gestión de Estado (Solo Funcionarios y Admins) -->
+                <?php if (isset($_SESSION['usuario_rol']) && in_array($_SESSION['usuario_rol'], ['funcionario', 'admin'])): ?>
+                <div class="reporte-gestion-estado" style="margin-top: 30px; background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <h4 style="font-size: 0.95rem; font-weight: 600; color: #334155; margin-bottom: 15px;">
+                        <i class="fas fa-tasks"></i> Gestión de Estado (Solo Funcionarios)
                     </h4>
-                    <div class="estado-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <?php
-                        $opciones_estado = [
-                            'pendiente'  => ['label' => 'Pendiente',   'class' => 'btn-warning', 'icon' => 'fa-clock'],
-                            'en_proceso' => ['label' => 'En Proceso',  'class' => 'btn-info',    'icon' => 'fa-spinner'],
-                            'resuelto'   => ['label' => 'Resuelto',    'class' => 'btn-success', 'icon' => 'fa-check'],
-                            'rechazado'  => ['label' => 'Rechazado',   'class' => 'btn-danger',  'icon' => 'fa-times'],
-                        ];
+                    <form action="actualizar_estado.php" method="POST" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="hidden" name="reporte_id" value="<?php echo $id; ?>">
+                        <select name="nuevo_estado" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 6px; border: 2px solid #cbd5e1; font-weight: 600; color: #475569;">
+                            <?php foreach ($etiquetas_estado as $slug => $data): ?>
+                                <option value="<?php echo $slug; ?>" <?php echo $reporte['estado'] === $slug ? 'selected' : ''; ?>>
+                                    <?php echo $data['label']; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">Actualizar Estado</button>
+                    </form>
+                </div>
+                <?php endif; ?>
 
-                        foreach ($opciones_estado as $slug => $data):
-                            $is_current = ($reporte['estado'] === $slug);
-                        ?>
-                            <form action="actualizar_estado.php" method="POST" style="display: inline;">
-                                <input type="hidden" name="reporte_id" value="<?php echo $id; ?>">
-                                <input type="hidden" name="nuevo_estado" value="<?php echo $slug; ?>">
-                                <button type="submit" class="btn <?php echo $data['class']; ?> btn-sm" 
-                                        <?php echo $is_current ? 'disabled' : ''; ?>
-                                        style="<?php echo $is_current ? 'opacity: 0.5; cursor: not-allowed;' : ''; ?>">
-                                    <i class="fas <?php echo $data['icon']; ?>"></i> <?php echo $data['label']; ?>
-                                </button>
-                            </form>
-                        <?php endforeach; ?>
+                <!-- Sección de Comentarios Privados (Solo Funcionarios/Admin) -->
+                <?php if (isset($_SESSION['usuario_rol']) && in_array($_SESSION['usuario_rol'], ['funcionario', 'admin'])): ?>
+                <div class="reporte-comentarios" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #f1f5f9; background: #1e293b; padding: 20px; border-radius: 8px; color: #f8fafc;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #f8fafc;"><i class="fas fa-user-secret"></i> Comentarios Internos (<?php echo count($comentarios_privados); ?>)</h3>
+                    
+                    <div class="lista-comentarios" style="margin-bottom: 25px;">
+                        <?php if (empty($comentarios_privados)): ?>
+                            <p style="color: #94a3b8; font-style: italic;">No hay notas internas.</p>
+                        <?php else: ?>
+                            <?php foreach ($comentarios_privados as $cp): ?>
+                                <div class="comentario-item" style="background: #334155; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #ef4444;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; color: #e2e8f0; font-size: 0.9rem;">
+                                            <?php echo htmlspecialchars($cp['usuario_nombre']); ?> <span style="font-size:0.75rem; background: #ef4444; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">Nota Interna</span>
+                                        </span>
+                                        <span style="font-size: 0.75rem; color: #94a3b8;">
+                                            <?php echo date('d/m/Y H:i', strtotime($cp['fecha_creacion'])); ?>
+                                        </span>
+                                    </div>
+                                    <p style="font-size: 0.88rem; color: #cbd5e1; margin: 0; line-height: 1.5;">
+                                        <?php echo nl2br(htmlspecialchars($cp['comentario'])); ?>
+                                    </p>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="nuevo-comentario">
+                        <form action="guardar_comentario_privado.php" method="POST">
+                            <input type="hidden" name="reporte_id" value="<?php echo $id; ?>">
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <textarea name="comentario" rows="2" placeholder="Agregar nota privada interna..." required 
+                                          style="width: 100%; padding: 12px; border: 1px solid #475569; border-radius: 8px; resize: vertical; font-family: inherit; font-size: 0.9rem; background: #0f172a; color: white;"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger" style="background: #ef4444;">
+                                <i class="fas fa-lock"></i> Guardar Nota Interna
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <?php endif; ?>
 
-                <!-- Sección de Comentarios -->
+                <!-- Sección de Comentarios Públicos -->
                 <div class="reporte-comentarios" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #f1f5f9;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 20px;"><i class="fas fa-comments"></i> Comentarios (<?php echo count($comentarios); ?>)</h3>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px;"><i class="fas fa-comments"></i> Comentarios Públicos (<?php echo count($comentarios); ?>)</h3>
                     
                     <div class="lista-comentarios" style="margin-bottom: 25px;">
                         <?php if (empty($comentarios)): ?>
                             <p style="color: #94a3b8; font-style: italic;">No hay comentarios todavía. ¡Sé el primero en comentar!</p>
                         <?php else: ?>
                             <?php foreach ($comentarios as $comentario): ?>
-                                <div class="comentario-item" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #cbd5e1;">
+                                <?php 
+                                    $border_color = '#cbd5e1'; // gris (usuario)
+                                    if ($comentario['usuario_rol'] === 'admin') {
+                                        $border_color = '#ef4444'; // rojo
+                                    } elseif ($comentario['usuario_rol'] === 'funcionario') {
+                                        $border_color = '#3b82f6'; // azul
+                                    }
+                                ?>
+                                <div class="comentario-item" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid <?php echo $border_color; ?>;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                         <span style="font-weight: 600; color: #1e293b; font-size: 0.9rem;">
                                             <?php echo htmlspecialchars($comentario['usuario_nombre']); ?>
+                                            <?php if ($comentario['usuario_rol'] === 'admin'): ?>
+                                                <span style="font-size:0.7rem; background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px; text-transform: uppercase;">Admin</span>
+                                            <?php elseif ($comentario['usuario_rol'] === 'funcionario'): ?>
+                                                <span style="font-size:0.7rem; background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px; text-transform: uppercase;">Funcionario</span>
+                                            <?php else: ?>
+                                                <span style="font-size:0.7rem; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; margin-left: 5px; text-transform: uppercase;">Usuario</span>
+                                            <?php endif; ?>
                                         </span>
                                         <span style="font-size: 0.75rem; color: #94a3b8;">
                                             <?php echo date('d/m/Y H:i', strtotime($comentario['fecha_creacion'])); ?>
@@ -223,7 +284,7 @@ $estado_info = $etiquetas_estado[$reporte['estado']] ?? ['label' => ucfirst($rep
                         <form action="guardar_comentario.php" method="POST">
                             <input type="hidden" name="reporte_id" value="<?php echo $id; ?>">
                             <div class="form-group" style="margin-bottom: 12px;">
-                                <textarea name="contenido" rows="3" placeholder="Escribe un comentario..." required 
+                                <textarea name="contenido" rows="3" placeholder="Escribe un comentario público..." required 
                                           style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; resize: vertical; font-family: inherit; font-size: 0.9rem;"></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">

@@ -107,6 +107,11 @@ $conexion->close();
             <div class="perfil-card perfil-hero">
                 <div class="avatar-grande"><?php echo strtoupper(substr($usuario['nombre'], 0, 1)); ?></div>
                 <h2><?php echo htmlspecialchars($usuario['nombre']); ?></h2>
+                <div style="margin-bottom: 15px; margin-top: -5px;">
+                    <span style="background: #e2e8f0; color: #475569; padding: 4px 12px; border-radius: 16px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                        <i class="fas fa-id-badge"></i> Rol: <?php echo isset($_SESSION['usuario_rol']) ? htmlspecialchars($_SESSION['usuario_rol']) : 'usuario'; ?>
+                    </span>
+                </div>
                 <p class="perfil-email"><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($usuario['email']); ?></p>
                 <p class="perfil-fecha"><i class="fas fa-calendar-alt"></i> Miembro desde <?php echo date('d \d\e F \d\e Y', strtotime($usuario['fecha_creacion'])); ?></p>
 

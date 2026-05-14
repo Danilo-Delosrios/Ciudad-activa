@@ -32,14 +32,13 @@ if (!isset($_SESSION['usuario_id'])) {
 
                 <div class="form-group">
                     <label for="titulo">Título del Reporte *</label>
-                    <input type="text" id="titulo" name="titulo" required
-                           placeholder="Describe brevemente el problema">
+                    <input type="text" id="titulo" name="titulo" required placeholder="Describe brevemente el problema">
                 </div>
 
                 <div class="form-group">
                     <label for="descripcion">Descripción Detallada *</label>
                     <textarea id="descripcion" name="descripcion" required
-                              placeholder="Proporciona más detalles sobre el problema"></textarea>
+                        placeholder="Proporciona más detalles sobre el problema"></textarea>
                 </div>
 
                 <div class="form-grupo-inline">
@@ -58,22 +57,14 @@ if (!isset($_SESSION['usuario_id'])) {
                     <div class="form-group">
                         <label for="ubicacion">Dirección / Referencia *</label>
                         <input type="text" id="ubicacion" name="ubicacion" required
-                               placeholder="Ej: Calle 72 con Av. Caracas">
+                            placeholder="Ej: Calle 72 con Av. Caracas">
                     </div>
 
                     <div class="form-group">
                         <label for="ciudad">Ciudad *</label>
                         <select id="ciudad" name="ciudad" required>
                             <option value="">-- Selecciona una ciudad --</option>
-                            <option value="Bogotá">Bogotá</option>
-                            <option value="Medellín">Medellín</option>
-                            <option value="Cali">Cali</option>
-                            <option value="Barranquilla">Barranquilla</option>
                             <option value="Cartagena">Cartagena</option>
-                            <option value="Bucaramanga">Bucaramanga</option>
-                            <option value="Pereira">Pereira</option>
-                            <option value="Santa Marta">Santa Marta</option>
-                            <option value="Otras">Otras</option>
                         </select>
                     </div>
                 </div>
@@ -83,7 +74,8 @@ if (!isset($_SESSION['usuario_id'])) {
                     <label>
                         <i class="fas fa-map-pin"></i>
                         Ubicación exacta en el mapa
-                        <small style="font-weight:normal; color:#6b7280;">— Opcional: haz clic en el mapa para marcar el punto exacto</small>
+                        <small style="font-weight:normal; color:#6b7280;">— Opcional: haz clic en el mapa para marcar el
+                            punto exacto</small>
                     </label>
 
                     <div class="mapa-selector-wrapper">
@@ -95,7 +87,7 @@ if (!isset($_SESSION['usuario_id'])) {
                     </div>
 
                     <!-- Campos ocultos con coordenadas -->
-                    <input type="hidden" id="latitud"  name="latitud"  value="">
+                    <input type="hidden" id="latitud" name="latitud" value="">
                     <input type="hidden" id="longitud" name="longitud" value="">
                 </div>
 
@@ -127,91 +119,91 @@ if (!isset($_SESSION['usuario_id'])) {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-// ── Mapa selector de ubicación ──────────────────────────────────────────────
-const defaultCenter = [4.5709, -74.2973];
-const defaultZoom = 6;
+    // ── Mapa selector de ubicación ──────────────────────────────────────────────
+    const defaultCenter = [4.5709, -74.2973];
+    const defaultZoom = 6;
 
-const mapaSelector = L.map('mapa-selector', {
-    center: defaultCenter,
-    zoom: defaultZoom
-});
+    const mapaSelector = L.map('mapa-selector', {
+        center: defaultCenter,
+        zoom: defaultZoom
+    });
 
-// Intentar obtener geolocalización para centrar el mapa
-if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            mapaSelector.setView([position.coords.latitude, position.coords.longitude], 14);
-        },
-        function(error) {
-            console.log("Geolocalización no disponible para centrar mapa:", error.message);
-        },
-        { timeout: 10000, enableHighAccuracy: true }
-    );
-}
+    // Intentar obtener geolocalización para centrar el mapa
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                mapaSelector.setView([position.coords.latitude, position.coords.longitude], 14);
+            },
+            function (error) {
+                console.log("Geolocalización no disponible para centrar mapa:", error.message);
+            },
+            { timeout: 10000, enableHighAccuracy: true }
+        );
+    }
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19
-}).addTo(mapaSelector);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(mapaSelector);
 
-let marcadorSeleccionado = null;
+    let marcadorSeleccionado = null;
 
-// Icono del marcador de selección
-const iconoSeleccion = L.divIcon({
-    html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 32 40">
+    // Icono del marcador de selección
+    const iconoSeleccion = L.divIcon({
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 32 40">
                <path d="M16 0C7.164 0 0 7.163 0 16c0 9.895 14.059 22.88 15.281 23.97a1 1 0 0 0 1.438 0C17.941 38.88 32 25.895 32 16 32 7.163 24.836 0 16 0z"
                      fill="#0066cc" stroke="white" stroke-width="1.5"/>
                <circle cx="16" cy="16" r="7" fill="white" opacity="0.95"/>
                <circle cx="16" cy="16" r="4" fill="#0066cc"/>
            </svg>`,
-    iconSize: [36, 44],
-    iconAnchor: [18, 44],
-    popupAnchor: [0, -46],
-    className: ''
-});
-
-// Click en el mapa para colocar marcador
-mapaSelector.on('click', function(e) {
-    const { lat, lng } = e.latlng;
-
-    // Remover marcador anterior
-    if (marcadorSeleccionado) {
-        mapaSelector.removeLayer(marcadorSeleccionado);
-    }
-
-    // Colocar nuevo marcador
-    marcadorSeleccionado = L.marker([lat, lng], { icon: iconoSeleccion, draggable: true })
-        .addTo(mapaSelector)
-        .bindPopup('<b>📍 Ubicación seleccionada</b><br>Puedes arrastrarme para ajustar.')
-        .openPopup();
-
-    // Al arrastrar el marcador, actualizar coordenadas
-    marcadorSeleccionado.on('dragend', function(event) {
-        const pos = event.target.getLatLng();
-        actualizarCoordenadas(pos.lat, pos.lng);
+        iconSize: [36, 44],
+        iconAnchor: [18, 44],
+        popupAnchor: [0, -46],
+        className: ''
     });
 
-    actualizarCoordenadas(lat, lng);
-});
+    // Click en el mapa para colocar marcador
+    mapaSelector.on('click', function (e) {
+        const { lat, lng } = e.latlng;
 
-function actualizarCoordenadas(lat, lng) {
-    document.getElementById('latitud').value  = lat.toFixed(7);
-    document.getElementById('longitud').value = lng.toFixed(7);
-    document.getElementById('coords-texto').textContent =
-        lat.toFixed(5) + ', ' + lng.toFixed(5);
-    document.getElementById('mapa-info').classList.remove('oculto');
-}
+        // Remover marcador anterior
+        if (marcadorSeleccionado) {
+            mapaSelector.removeLayer(marcadorSeleccionado);
+        }
 
-// Mapa opcional: avisa pero no bloquea el envío
-document.getElementById('form-reporte').addEventListener('submit', function() {
-    const lat = document.getElementById('latitud').value;
-    const lng = document.getElementById('longitud').value;
-    if (!lat || !lng) {
-        // Mostrar aviso suave (sin bloquear)
-        const aviso = document.getElementById('aviso-mapa');
-        if (aviso) aviso.style.display = 'flex';
+        // Colocar nuevo marcador
+        marcadorSeleccionado = L.marker([lat, lng], { icon: iconoSeleccion, draggable: true })
+            .addTo(mapaSelector)
+            .bindPopup('<b>📍 Ubicación seleccionada</b><br>Puedes arrastrarme para ajustar.')
+            .openPopup();
+
+        // Al arrastrar el marcador, actualizar coordenadas
+        marcadorSeleccionado.on('dragend', function (event) {
+            const pos = event.target.getLatLng();
+            actualizarCoordenadas(pos.lat, pos.lng);
+        });
+
+        actualizarCoordenadas(lat, lng);
+    });
+
+    function actualizarCoordenadas(lat, lng) {
+        document.getElementById('latitud').value = lat.toFixed(7);
+        document.getElementById('longitud').value = lng.toFixed(7);
+        document.getElementById('coords-texto').textContent =
+            lat.toFixed(5) + ', ' + lng.toFixed(5);
+        document.getElementById('mapa-info').classList.remove('oculto');
     }
-});
+
+    // Mapa opcional: avisa pero no bloquea el envío
+    document.getElementById('form-reporte').addEventListener('submit', function () {
+        const lat = document.getElementById('latitud').value;
+        const lng = document.getElementById('longitud').value;
+        if (!lat || !lng) {
+            // Mostrar aviso suave (sin bloquear)
+            const aviso = document.getElementById('aviso-mapa');
+            if (aviso) aviso.style.display = 'flex';
+        }
+    });
 </script>
 
 <?php require_once '../includes/footer.php'; ?>

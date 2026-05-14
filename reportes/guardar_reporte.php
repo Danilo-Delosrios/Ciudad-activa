@@ -89,7 +89,7 @@ if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
 // y PHP MySQLi envía NULL SQL cuando el valor PHP es null con tipo 's'
 $sql = 'INSERT INTO reportes
             (usuario_id, titulo, descripcion, categoria, ubicacion, ciudad, latitud, longitud, imagen, estado, fecha_creacion)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "pendiente", NOW())';
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "reportado", NOW())';
 
 $stmt = $conexion->prepare($sql);
 

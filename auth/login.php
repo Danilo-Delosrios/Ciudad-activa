@@ -35,14 +35,13 @@ if (isset($_SESSION['usuario_id'])) {
         <form method="POST" action="procesar_login.php">
             <div class="form-group">
                 <label for="email">Correo Electrónico</label>
-                <input type="email" id="email" name="email" required
-                       placeholder="tu@correo.com" autocomplete="email">
+                <input type="email" id="email" name="email" required placeholder="tu@correo.com" autocomplete="email">
             </div>
 
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" required
-                       placeholder="••••••••" autocomplete="current-password">
+                <input type="password" id="password" name="password" required placeholder="••••••••"
+                    autocomplete="current-password">
             </div>
 
             <button type="submit" class="btn btn-primary btn-block">
@@ -52,7 +51,7 @@ if (isset($_SESSION['usuario_id'])) {
 
         <div class="auth-links">
             <a href="registro.php">¿No tienes cuenta? <strong>Regístrate</strong></a>
-            <a href="recuperar.php">¿Olvidaste tu contraseña?</a>
+            <a href="recuperar.php">.</a>
         </div>
     </div>
 </div>

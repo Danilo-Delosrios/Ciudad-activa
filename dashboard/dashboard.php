@@ -20,10 +20,10 @@ $stmt->bind_param('i', $_SESSION['usuario_id']);
 $stmt->execute();
 $reportes_resueltos = $stmt->get_result()->fetch_assoc()['total'];
 
-$stmt = $conexion->prepare('SELECT COUNT(*) as total FROM reportes WHERE usuario_id = ? AND estado = "pendiente"');
+$stmt = $conexion->prepare('SELECT COUNT(*) as total FROM reportes WHERE usuario_id = ? AND estado = "reportado"');
 $stmt->bind_param('i', $_SESSION['usuario_id']);
 $stmt->execute();
-$reportes_pendientes = $stmt->get_result()->fetch_assoc()['total'];
+$reportes_reportados = $stmt->get_result()->fetch_assoc()['total'];
 
 // Obtener todos los reportes con coordenadas para el mapa
 $stmt = $conexion->prepare(
@@ -79,10 +79,10 @@ $conexion->close();
                 <h3>Resueltos</h3>
                 <div class="stat-number"><?php echo $reportes_resueltos; ?></div>
             </div>
-            <div class="stat-card stat-pendiente">
+            <div class="stat-card stat-reportado">
                 <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                <h3>Pendientes</h3>
-                <div class="stat-number"><?php echo $reportes_pendientes; ?></div>
+                <h3>Reportados</h3>
+                <div class="stat-number"><?php echo $reportes_reportados; ?></div>
             </div>
         </div>
 
@@ -91,10 +91,11 @@ $conexion->close();
             <div class="map-section-header">
                 <h2><i class="fas fa-map-marked-alt"></i> Mapa de Reportes Ciudadanos</h2>
                 <div class="map-legend">
-                    <span class="legend-item"><span class="legend-dot dot-pendiente"></span> Pendiente</span>
-                    <span class="legend-item"><span class="legend-dot dot-en_proceso"></span> En proceso</span>
-                    <span class="legend-item"><span class="legend-dot dot-resuelto"></span> Resuelto</span>
-                    <span class="legend-item"><span class="legend-dot dot-rechazado"></span> Rechazado</span>
+                    <span class="legend-item"><span class="legend-dot dot-reportado" style="background-color: #f59e0b;"></span> Reportado</span>
+                    <span class="legend-item"><span class="legend-dot dot-en_revision" style="background-color: #8b5cf6;"></span> En revisión</span>
+                    <span class="legend-item"><span class="legend-dot dot-en_proceso" style="background-color: #3b82f6;"></span> En proceso</span>
+                    <span class="legend-item"><span class="legend-dot dot-resuelto" style="background-color: #10b981;"></span> Resuelto</span>
+                    <span class="legend-item"><span class="legend-dot dot-rechazado" style="background-color: #ef4444;"></span> Rechazado</span>
                 </div>
             </div>
             <div id="mapa-dashboard" class="leaflet-map"></div>
@@ -159,10 +160,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // Colores por estado
 const coloresEstado = {
-    pendiente:  '#f59e0b',
-    en_proceso: '#3b82f6',
-    resuelto:   '#10b981',
-    rechazado:  '#ef4444'
+    reportado:   '#f59e0b',
+    en_revision: '#8b5cf6',
+    en_proceso:  '#3b82f6',
+    resuelto:    '#10b981',
+    rechazado:   '#ef4444'
 };
 
 // Iconos SVG personalizados por estado

@@ -3,6 +3,7 @@
  * Eliminar reporte — solo el propietario puede eliminar su reporte
  */
 require_once '../includes/conexion.php';
+session_start();
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: ../auth/login.php');

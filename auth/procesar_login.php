@@ -29,7 +29,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 // Buscar usuario en la base de datos
-$sql = 'SELECT id, nombre, email, contraseña FROM usuarios WHERE email = ?';
+$sql = 'SELECT id, nombre, email, contraseña, rol FROM usuarios WHERE email = ?';
 $stmt = $conexion->prepare($sql);
 
 if (!$stmt) {
@@ -58,6 +58,7 @@ if (!password_verify($password, $usuario['contraseña'])) {
 $_SESSION['usuario_id'] = $usuario['id'];
 $_SESSION['usuario_nombre'] = $usuario['nombre'];
 $_SESSION['usuario_email'] = $usuario['email'];
+$_SESSION['usuario_rol'] = $usuario['rol'];
 
 $stmt->close();
 $conexion->close();

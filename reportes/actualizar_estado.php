@@ -12,18 +12,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nuevo_estado = isset($_POST['nuevo_estado']) ? trim($_POST['nuevo_estado']) : '';
 
     // Validar estados permitidos
-    $estados_permitidos = ['pendiente', 'en_proceso', 'resuelto', 'rechazado'];
+    $estados_permitidos = ['reportado', 'en_revision', 'en_proceso', 'resuelto', 'rechazado'];
     
+    // Validar que sea funcionario o admin
+    if (!isset($_SESSION['usuario_rol']) || !in_array($_SESSION['usuario_rol'], ['funcionario', 'admin'])) {
+        header("Location: ver_reporte.php?id=$reporte_id&error=" . urlencode("No tienes permiso para cambiar el estado."));
+        exit();
+    }
+
     if ($reporte_id > 0 && in_array($nuevo_estado, $estados_permitidos)) {
-        // Verificar propiedad del reporte
-        $stmt = $conexion->prepare('UPDATE reportes SET estado = ?, fecha_actualizacion = NOW() WHERE id = ? AND usuario_id = ?');
-        $stmt->bind_param('sii', $nuevo_estado, $reporte_id, $_SESSION['usuario_id']);
+        // Obtener estado anterior
+        $stmt_estado = $conexion->prepare('SELECT estado FROM reportes WHERE id = ?');
+        $stmt_estado->bind_param('i', $reporte_id);
+        $stmt_estado->execute();
+        $res_estado = $stmt_estado->get_result();
+        $estado_anterior = '';
+        if ($res_estado->num_rows > 0) {
+            $estado_anterior = $res_estado->fetch_assoc()['estado'];
+        }
+        $stmt_estado->close();
+
+        // Actualizar estado
+        $stmt = $conexion->prepare('UPDATE reportes SET estado = ?, fecha_actualizacion = NOW() WHERE id = ?');
+        $stmt->bind_param('si', $nuevo_estado, $reporte_id);
         
         if ($stmt->execute()) {
             if ($stmt->affected_rows > 0) {
+                // Registrar en historial
+                $stmt_historial = $conexion->prepare('INSERT INTO historial_cambios_estado (reporte_id, estado_anterior, estado_nuevo, usuario_id) VALUES (?, ?, ?, ?)');
+                $stmt_historial->bind_param('issi', $reporte_id, $estado_anterior, $nuevo_estado, $_SESSION['usuario_id']);
+                $stmt_historial->execute();
+                $stmt_historial->close();
+
                 header("Location: ver_reporte.php?id=$reporte_id&success=" . urlencode("Estado actualizado a " . ucfirst(str_replace('_', ' ', $nuevo_estado))));
             } else {
-                header("Location: ver_reporte.php?id=$reporte_id&error=" . urlencode("No se realizaron cambios o no tienes permiso."));
+                header("Location: ver_reporte.php?id=$reporte_id&error=" . urlencode("No se realizaron cambios. Es posible que el reporte ya estuviera en ese estado."));
             }
         } else {
             header("Location: ver_reporte.php?id=$reporte_id&error=" . urlencode("Error al actualizar el estado: " . $conexion->error));
